@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.vabai.ga","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="安卓提取微信聊天记录操作，但是需要手机获取root权限，主要操作是提取微信EnMicroMsg.db文件并解密。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="微信聊天数据库(EnMicroMsg)解密与导出">
+<meta property="og:url" content="https://blog.vabai.ga/2022/10/27/%E5%BE%AE%E4%BF%A1%E8%81%8A%E5%A4%A9%E6%95%B0%E6%8D%AE%E5%BA%93-EnMicroMsg-%E8%A7%A3%E5%AF%86%E4%B8%8E%E5%AF%BC%E5%87%BA/index.html">
+<meta property="og:site_name" content="哇白小记">
+<meta property="og:description" content="安卓提取微信聊天记录操作，但是需要手机获取root权限，主要操作是提取微信EnMicroMsg.db文件并解密。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-10-27T11:49:53.000Z">
+<meta property="article:modified_time" content="2022-10-28T09:41:06.922Z">
+<meta property="article:author" content="Bai_Yumo">
+<meta property="article:tag" content="微信">
+<meta property="article:tag" content="SQL">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://blog.vabai.ga/2022/10/27/%E5%BE%AE%E4%BF%A1%E8%81%8A%E5%A4%A9%E6%95%B0%E6%8D%AE%E5%BA%93-EnMicroMsg-%E8%A7%A3%E5%AF%86%E4%B8%8E%E5%AF%BC%E5%87%BA/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>微信聊天数据库(EnMicroMsg)解密与导出 | 哇白小记</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?c368b0c11c05f9114227f90202f1f213";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">哇白小记</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.vabai.ga/2022/10/27/%E5%BE%AE%E4%BF%A1%E8%81%8A%E5%A4%A9%E6%95%B0%E6%8D%AE%E5%BA%93-EnMicroMsg-%E8%A7%A3%E5%AF%86%E4%B8%8E%E5%AF%BC%E5%87%BA/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://s1.ax1x.com/2022/10/22/xgig1S.jpg">
+      <meta itemprop="name" content="Bai_Yumo">
+      <meta itemprop="description" content="哇白小记~">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="哇白小记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          微信聊天数据库(EnMicroMsg)解密与导出
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-10-27 19:49:53" itemprop="dateCreated datePublished" datetime="2022-10-27T19:49:53+08:00">2022-10-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-10-28 17:41:06" itemprop="dateModified" datetime="2022-10-28T17:41:06+08:00">2022-10-28</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>安卓提取微信聊天记录操作，但是需要手机获取root权限，主要操作是提取微信EnMicroMsg.db文件并解密。</p>
+<span id="more"></span>
+<p>本文使用手机为Android 12.0，微信版本为8.0.22</p>
+<h2 id="提取微信数据库文件"><a href="#提取微信数据库文件" class="headerlink" title="提取微信数据库文件"></a>提取微信数据库文件</h2><p>安卓手机获取root权限后，使用文件管理器如 <strong>MT管理器</strong>，在手机根目录下 <strong>&#x2F;data&#x2F;data&#x2F;com.tencent.mm&#x2F;MicroMsg&#x2F;</strong> 下有一个一长串英文数字的文件夹，如果有多个说明手机登录过多个微信，选时间最近的一个。文件夹里面有<strong>EnMicroMsg.db</strong>文件这个便是微信聊天记录信息数据库。把文件复制到电脑备用。</p>
+<h2 id="数据库密码获取"><a href="#数据库密码获取" class="headerlink" title="数据库密码获取"></a>数据库密码获取</h2><p>微信数据库需要解密后才能获取内容密码是<strong>1234567890ABCDEF</strong>加上微信<strong>UIN</strong>MD5加密后的前7位，<strong>UIN</strong>在 <strong>&#x2F;data&#x2F;data&#x2F;com.tencent.mm&#x2F;shared_prefs&#x2F;auth_info_key_prefs.xml</strong> 文件内可以找到</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- auth_info_key_prefs.xml --&gt;</span></span><br><span class="line"><span class="meta">&lt;?xml version=&#x27;1.0&#x27; encoding=&#x27;utf-8&#x27; standalone=&#x27;yes&#x27; ?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">map</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">boolean</span> <span class="attr">name</span>=<span class="string">&quot;auth_info_prefs_use_new_ecdh&quot;</span> <span class="attr">value</span>=<span class="string">&quot;true&quot;</span> /&gt;</span></span><br><span class="line">                     <span class="comment">&lt;!-- 这里的xxx就是UIN --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">int</span> <span class="attr">name</span>=<span class="string">&quot;_auth_uin&quot;</span> <span class="attr">value</span>=<span class="string">&quot;xxxxxxxxx&quot;</span> /&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- other --&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">map</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>获得UIN后可以使用如<a target="_blank" rel="noopener" href="https://md5jiami.bmcx.com/">MD5在线加密</a>等工具加密后的32位小写字母值的<strong>前7位</strong>就是数据库的密码<br>例如：<br>UIN是 <strong>-188888888</strong>就计算 <strong>1234567890ABCDEF-188888888</strong> 的MD5值(9a545bef1173cbb84f7677c07cbe6d53)，其中<strong>9a545be</strong>便是密码。</p>
+<h2 id="读取数据库"><a href="#读取数据库" class="headerlink" title="读取数据库"></a>读取数据库</h2><p>使用<a target="_blank" rel="noopener" href="https://github.com/lasting-yang/sqlitebrowser">SQLCipher</a>打开数据库文件，输入上文获取的密码，即可解密数据库文件。<br><strong>message</strong>为聊天记录表，所有聊天记录原始文本都在这里，其中比较主要的字段有：</p>
+<ul>
+<li>type 消息类型</li>
+<li>isSend 是否为发送人，0不是 1是</li>
+<li>talker 为聊天对象的wxid</li>
+<li>content 消息内容</li>
+<li>createTime 消息发送时间戳</li>
+</ul>
+<p>type字段中的值代表：</p>
+<table>
+<thead>
+<tr>
+<th>值</th>
+<th>类型</th>
+<th>值</th>
+<th>类型</th>
+<th>值</th>
+<th>类型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>普通消息</td>
+<td>1040187441</td>
+<td>音乐分享</td>
+<td>1048625</td>
+<td>输入法表情包</td>
+</tr>
+<tr>
+<td>3</td>
+<td>照片消息</td>
+<td>16777265</td>
+<td>分享类文本消息</td>
+<td>50</td>
+<td>语音电话&#x2F;视频电话</td>
+</tr>
+<tr>
+<td>34</td>
+<td>语音消息</td>
+<td>754974769</td>
+<td>视频号分享</td>
+<td>10000</td>
+<td>撤回&#x2F;好友验证提醒</td>
+</tr>
+<tr>
+<td>42</td>
+<td>个人&#x2F;公众号 名片</td>
+<td>1090519089</td>
+<td>文件</td>
+<td>268445456</td>
+<td>自己撤回的消息，重新编辑了</td>
+</tr>
+<tr>
+<td>43</td>
+<td>视频消息</td>
+<td>419430449</td>
+<td>转账</td>
+<td>268445458</td>
+<td>重新编辑后发送</td>
+</tr>
+<tr>
+<td>47</td>
+<td>动画表情</td>
+<td>704643121</td>
+<td>转账未接收提醒</td>
+<td>822083633</td>
+<td>消息引用</td>
+</tr>
+<tr>
+<td>48</td>
+<td>定位信息</td>
+<td>436207665</td>
+<td>红包</td>
+<td>922746929</td>
+<td>拍一拍</td>
+</tr>
+<tr>
+<td>49</td>
+<td>链接消息&#x2F;聊天记录转发&#x2F;小程序</td>
+<td>-1879048186</td>
+<td>定位共享</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>536936497</td>
+<td>红包封面</td>
+<td>85</td>
+<td>铃声设置</td>
+<td>536870961</td>
+<td>亲属卡</td>
+</tr>
+</tbody></table>
+
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Bai_Yumo
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://blog.vabai.ga/2022/10/27/%E5%BE%AE%E4%BF%A1%E8%81%8A%E5%A4%A9%E6%95%B0%E6%8D%AE%E5%BA%93-EnMicroMsg-%E8%A7%A3%E5%AF%86%E4%B8%8E%E5%AF%BC%E5%87%BA/" title="微信聊天数据库(EnMicroMsg)解密与导出">https://blog.vabai.ga/2022/10/27/微信聊天数据库-EnMicroMsg-解密与导出/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%BE%AE%E4%BF%A1/" rel="tag"># 微信</a>
+              <a href="/tags/SQL/" rel="tag"># SQL</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/10/22/%E5%85%8D%E8%B4%B9%E5%9F%9F%E5%90%8D(Freenom)%E8%8E%B7%E5%8F%96/" rel="prev" title="免费域名(Freenom)获取">
+      <i class="fa fa-chevron-left"></i> 免费域名(Freenom)获取
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/11/04/Linux-Nginx-%E9%83%A8%E7%BD%B2/" rel="next" title="Linux Nginx 部署">
+      Linux Nginx 部署 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8F%90%E5%8F%96%E5%BE%AE%E4%BF%A1%E6%95%B0%E6%8D%AE%E5%BA%93%E6%96%87%E4%BB%B6"><span class="nav-number">1.</span> <span class="nav-text">提取微信数据库文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AF%86%E7%A0%81%E8%8E%B7%E5%8F%96"><span class="nav-number">2.</span> <span class="nav-text">数据库密码获取</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%BB%E5%8F%96%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">3.</span> <span class="nav-text">读取数据库</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Bai_Yumo"
+      src="https://s1.ax1x.com/2022/10/22/xgig1S.jpg">
+  <p class="site-author-name" itemprop="name">Bai_Yumo</p>
+  <div class="site-description" itemprop="description">哇白小记~</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Bai_Yumo</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
