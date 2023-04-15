@@ -28,7 +28,7 @@
 <meta property="og:description" content="ffmpeg 图片音频合成视频、添加srt字幕、添加水印操作">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-04-15T15:52:59.000Z">
-<meta property="article:modified_time" content="2023-04-15T16:39:56.945Z">
+<meta property="article:modified_time" content="2023-04-15T17:05:35.612Z">
 <meta property="article:author" content="Bai_Yumo">
 <meta property="article:tag" content="ffmpeg">
 <meta name="twitter:card" content="summary">
@@ -223,7 +223,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-04-16 00:39:56" itemprop="dateModified" datetime="2023-04-16T00:39:56+08:00">2023-04-16</time>
+                <time title="修改时间：2023-04-16 01:05:35" itemprop="dateModified" datetime="2023-04-16T01:05:35+08:00">2023-04-16</time>
               </span>
 
           
@@ -239,8 +239,6 @@
       
         <p>ffmpeg 图片音频合成视频、添加srt字幕、添加水印操作</p>
 <span id="more"></span>
-
-<!-- ffmpeg -framerate 1 -loop 1 -i  cover.png -i 将进酒第一季-第八集.m4a  -vf "format=yuv420p,drawtext=fontsize=100:fontfile=SmileySans-Oblique.ttf:text='将进酒第一季-第八集':x=20:y=20:fontcolor=white,subtitles=将进酒第一季-第八集.srt" -b:v 1M  -r 20 -shortest -movflags +faststart out/将进酒第一季-第八集.mp4 -->
 
 <h2 id="单图片、音频合成视频"><a href="#单图片、音频合成视频" class="headerlink" title="单图片、音频合成视频"></a>单图片、音频合成视频</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ffmpeg -framerate 1 -loop 1 -i  图片.png -i 音频.mp3  -vf format=yuv420p -shortest -movflags +faststart out.mp4</span><br></pre></td></tr></table></figure>
 
